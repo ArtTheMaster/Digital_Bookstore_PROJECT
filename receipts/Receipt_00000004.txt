@@ -1,0 +1,25 @@
+========================================
+             THE BOOK NOOK              
+         Laguna Branch - POS Reg        
+========================================
+Receipt No  : 00000004
+Date        : 2026-05-11 02:05 AM
+Cashier     : Vino
+Customer    : Arlo Veridiano
+Membership  : SILVER
+----------------------------------------
+ITEM                   QTY       AMOUNT
+----------------------------------------
+Smaller and Smaller.   2         900.00
+----------------------------------------
+SUBTOTAL:                        900.00
+DISCOUNT:                    -    45.00
+========================================
+AMOUNT DUE:                      855.00
+========================================
+CASH TENDERED:                  1500.00
+CHANGE:                          645.00
+
+       Official Receipt / Invoice       
+        Thank you for shopping!         
+========================================

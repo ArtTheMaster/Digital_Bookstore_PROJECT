@@ -1,0 +1,108 @@
+-- 1. Wipe the slate clean and start fresh
+DROP DATABASE IF EXISTS bookstore_pos;
+CREATE DATABASE bookstore_pos;
+USE bookstore_pos;
+
+-- 2. Create Tables (The Models)
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100),
+    role ENUM('ADMIN', 'MANAGER', 'CASHIER') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE books (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    author VARCHAR(100) NOT NULL,
+    genre VARCHAR(50),
+    isbn VARCHAR(20) UNIQUE,
+    price DECIMAL(10, 2) NOT NULL,
+    description TEXT
+);
+
+CREATE TABLE inventory (
+    book_id INT PRIMARY KEY,
+    quantity INT NOT NULL DEFAULT 0,
+    low_stock_threshold INT NOT NULL DEFAULT 5,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+);
+
+CREATE TABLE suppliers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    contact_person VARCHAR(100),
+    phone VARCHAR(20),
+    email VARCHAR(100),
+    address TEXT
+);
+
+CREATE TABLE customers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    phone VARCHAR(20),
+    is_member BOOLEAN DEFAULT FALSE,
+    points DECIMAL(10,2) DEFAULT 0.00,
+    tier ENUM('BRONZE', 'SILVER', 'GOLD') DEFAULT 'BRONZE'
+);
+
+CREATE TABLE orders (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    customer_id INT NULL,
+    total_amount DECIMAL(10, 2) NOT NULL,
+    discount_applied DECIMAL(10,2) DEFAULT 0.00,
+    payment_method ENUM('CASH', 'CARD', 'E_WALLET') NOT NULL,
+    order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (customer_id) REFERENCES customers(id)
+);
+
+CREATE TABLE order_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT,
+    book_id INT,
+    quantity INT NOT NULL,
+    unit_price DECIMAL(10, 2) NOT NULL,
+    subtotal DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (book_id) REFERENCES books(id)
+);
+
+-- 3. Insert Seed Data
+-- ==========================================
+
+-- System Admin Account (Login: admin / Admin@1234)
+INSERT INTO users (username, password_hash, full_name, email, role) 
+VALUES ('admin', 'dGVzdHNhbHQ=:2y74b6i+q94TjEok0qIuPZ3eC39/QJ+n+bN+8X/b+nQ=', 'System Administrator', 'admin@booknook.com', 'ADMIN');
+
+-- Sample Books
+INSERT INTO books (title, author, genre, isbn, price, description) VALUES 
+('Noli Me Tangere', 'Jose Rizal', 'History', '978-9715082534', 360.00, 'Classic Philippine novel.'),
+('El Filibusterismo', 'Jose Rizal', 'History', '978-9715082541', 400.00, 'Sequel to Noli Me Tangere.'),
+('Smaller and Smaller Circles', 'F.H. Batacan', 'Mystery', '978-1616955343', 450.00, 'A gripping serial killer thriller set in Manila.'),
+('The Mythology Class', 'Arnold Arre', 'Fantasy', '978-9719306001', 350.00, 'Philippine mythology meets modern day.'),
+('Trese: Murder on Balete Drive', 'Budjette Tan', 'Horror', '978-9718161359', 250.00, 'Supernatural investigations in Metro Manila.');
+
+-- Corresponding Inventory (Crucial for the POS to work)
+-- Book ID 2 is purposely set to 3 to trigger your "Low Stock Alert" (Red text in the GUI)
+INSERT INTO inventory (book_id, quantity, low_stock_threshold) VALUES 
+(1, 20, 5),
+(2, 3, 5), 
+(3, 15, 5),
+(4, 30, 10),
+(5, 50, 10);
+
+-- Sample Suppliers
+INSERT INTO suppliers (name, contact_person, phone, email, address) VALUES
+('National Publishing House', 'Juan Dela Cruz', '09171234567', 'sales@nationalpub.ph', 'Quezon City, Metro Manila'),
+('Visayas Book Distributors', 'Maria Santos', '09189876543', 'contact@visayasbooks.ph', 'Cebu City, Cebu');
+
+-- Sample Customers
+INSERT INTO customers (name, phone, is_member, points, tier) VALUES
+('Walk-in Customer', '', FALSE, 0.00, 'BRONZE'),
+('Arlo Veridiano', '09191112222', TRUE, 150.00, 'SILVER');
