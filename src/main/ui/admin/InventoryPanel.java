@@ -22,7 +22,7 @@ import main.util.UITheme;
 public class InventoryPanel extends JPanel {
     private JTable table;
     private DefaultTableModel tableModel;
-    private TableRowSorter<DefaultTableModel> rowSorter; // NEW: Added Sorter
+    private TableRowSorter<DefaultTableModel> rowSorter; 
     private final BookDAO bookDAO = new BookDAO();
     private final InventoryDAO inventoryDAO = new InventoryDAO();
 
@@ -51,7 +51,6 @@ public class InventoryPanel extends JPanel {
         toolbar.setBackground(UITheme.SECONDARY_BG);
         toolbar.setBorder(BorderFactory.createEmptyBorder(15, 0, 10, 0));
 
-        // Search Bar
         JPanel searchBox = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         searchBox.setBackground(UITheme.SECONDARY_BG);
         JTextField txtSearch = new JTextField(20);
@@ -72,7 +71,6 @@ public class InventoryPanel extends JPanel {
         searchBox.add(Box.createHorizontalStrut(10));
         searchBox.add(btnSearch);
 
-        // Actions
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         actions.setBackground(UITheme.SECONDARY_BG);
 
@@ -97,7 +95,6 @@ public class InventoryPanel extends JPanel {
         headerPanel.add(toolbar, BorderLayout.SOUTH);
         add(headerPanel, BorderLayout.NORTH);
 
-        // Table Initialization
         String[] columns = {"ID", "Title", "Author", "Genre", "Price", "Stock", "Threshold"};
         tableModel = new DefaultTableModel(null, columns) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
@@ -106,7 +103,6 @@ public class InventoryPanel extends JPanel {
         table = new JTable(tableModel);
         styleTable(table);
 
-        // --- NEW: Wire up the Search Filter ---
         rowSorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(rowSorter);
 
@@ -117,7 +113,6 @@ public class InventoryPanel extends JPanel {
         };
         txtSearch.getDocument().addDocumentListener(searchListener);
         btnSearch.addActionListener(e -> executeSearch(txtSearch.getText()));
-        // --------------------------------------
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.getViewport().setBackground(UITheme.PRIMARY_BG);
@@ -130,16 +125,14 @@ public class InventoryPanel extends JPanel {
         add(tableWrapper, BorderLayout.CENTER);
     }
 
-    // --- NEW: Execute Search Method ---
     private void executeSearch(String query) {
         if (query.trim().isEmpty()) {
             rowSorter.setRowFilter(null);
             table.clearSelection();
         } else {
-            // Case-insensitive regex filter
             rowSorter.setRowFilter(RowFilter.regexFilter("(?i)" + query.trim()));
             if (table.getRowCount() > 0) {
-                table.setRowSelectionInterval(0, 0); // Highlight top result automatically
+                table.setRowSelectionInterval(0, 0); 
             }
         }
     }
@@ -191,9 +184,7 @@ public class InventoryPanel extends JPanel {
     private void restockSelectedBook() {
         int viewRow = table.getSelectedRow();
         if (viewRow >= 0) {
-            // FIXED: Convert visual row to actual database row to prevent errors when filtering!
             int modelRow = table.convertRowIndexToModel(viewRow);
-            
             int bookId = (int) tableModel.getValueAt(modelRow, 0);
             String title = (String) tableModel.getValueAt(modelRow, 1);
             int currentStock = (int) tableModel.getValueAt(modelRow, 5);
@@ -247,11 +238,26 @@ public class InventoryPanel extends JPanel {
         int result = JOptionPane.showConfirmDialog(this, panel, "Add New Book", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         
         if (result == JOptionPane.OK_OPTION) {
+            
+            // --- STRICT INPUT VALIDATION: Checks inputs BEFORE saving ---
+            if (txtTitle.getText().trim().isEmpty() || txtAuthor.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Title and Author cannot be empty.", "Missing Information", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            if (!InputValidator.isValidPrice(txtPrice.getText())) {
+                JOptionPane.showMessageDialog(this, "Please enter a valid numeric value for the Price (e.g., 250.50).", "Invalid Price", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            if (!InputValidator.isValidQuantity(txtStock.getText())) {
+                JOptionPane.showMessageDialog(this, "Please enter a valid whole number for Initial Stock.", "Invalid Stock", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            if (!InputValidator.isValidQuantity(txtThreshold.getText())) {
+                JOptionPane.showMessageDialog(this, "Please enter a valid whole number for Low Alert Threshold.", "Invalid Threshold", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
             try {
-                if (!InputValidator.isValidPrice(txtPrice.getText()) || !InputValidator.isValidQuantity(txtStock.getText())) {
-                    throw new Exception("Invalid price or stock values.");
-                }
-                
                 Book newBook = new Book(0, txtTitle.getText(), txtAuthor.getText(), txtGenre.getText(), "N/A", Double.parseDouble(txtPrice.getText()), "");
                 
                 if (bookDAO.insert(newBook)) {
@@ -266,7 +272,7 @@ public class InventoryPanel extends JPanel {
                     loadData();
                 }
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Input Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "System Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -274,7 +280,6 @@ public class InventoryPanel extends JPanel {
     private void deleteSelectedBook() {
         int viewRow = table.getSelectedRow();
         if (viewRow >= 0) {
-            // FIXED: Convert visual row to actual database row
             int modelRow = table.convertRowIndexToModel(viewRow);
             int bookId = (int) tableModel.getValueAt(modelRow, 0);
             

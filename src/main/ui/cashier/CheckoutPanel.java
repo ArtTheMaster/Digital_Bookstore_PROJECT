@@ -3,6 +3,7 @@ package main.ui.cashier;
 import java.awt.*;
 import javax.swing.*;
 import main.model.Order;
+import main.service.MembershipService;
 import main.service.ReceiptService;
 import main.service.SalesService;
 import main.util.UITheme;
@@ -23,7 +24,7 @@ public class CheckoutPanel extends JDialog {
     }
 
     private void setupDialog() {
-        setSize(450, 400);
+        setSize(450, 420);
         setLocationRelativeTo(getParent());
         getContentPane().setBackground(UITheme.PRIMARY_BG);
         setLayout(new BorderLayout());
@@ -38,7 +39,12 @@ public class CheckoutPanel extends JDialog {
         lblTitle.setForeground(UITheme.ACCENT);
         lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel lblTotal = new JLabel(String.format("₱%.2f", order.calculateTotal()));
+        // --- FIXED: DISPLAY THE ACTUAL DISCOUNTED AMOUNT TO THE CASHIER ---
+        double grossTotal = order.calculateTotal();
+        double discount = new MembershipService().calculateDiscount(order.getCustomer(), grossTotal);
+        double finalAmount = grossTotal - discount;
+
+        JLabel lblTotal = new JLabel(String.format("₱%.2f", finalAmount));
         lblTotal.setFont(UITheme.FONT_TITLE.deriveFont(36f));
         lblTotal.setForeground(UITheme.SUCCESS);
         lblTotal.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -74,12 +80,21 @@ public class CheckoutPanel extends JDialog {
         btnConfirm.setAlignmentX(Component.CENTER_ALIGNMENT);
         btnConfirm.addActionListener(e -> processPayment());
 
-        mainPanel.add(Box.createVerticalStrut(20));
+        mainPanel.add(Box.createVerticalStrut(15));
         mainPanel.add(lblTitle);
         mainPanel.add(Box.createVerticalStrut(10));
         mainPanel.add(lblAmountDue);
         mainPanel.add(lblTotal);
-        mainPanel.add(Box.createVerticalStrut(30));
+        
+        // --- ADDED: SHOW THE DISCOUNT TEXT IF APPLICABLE ---
+        if (discount > 0) {
+            JLabel lblDiscount = new JLabel(String.format("(Includes ₱%.2f Membership Savings)", discount));
+            lblDiscount.setForeground(UITheme.WARNING);
+            lblDiscount.setAlignmentX(Component.CENTER_ALIGNMENT);
+            mainPanel.add(lblDiscount);
+        }
+        
+        mainPanel.add(Box.createVerticalStrut(25));
         mainPanel.add(inputPanel);
         mainPanel.add(Box.createVerticalStrut(30));
         mainPanel.add(btnConfirm);
@@ -93,16 +108,11 @@ public class CheckoutPanel extends JDialog {
             order.setPaymentMethod("CASH");
             
             if (salesService.processCheckout(order, order.getCustomer(), cash)) {
-                
-                // POP UP THE RECEIPT!
                 ReceiptService receiptService = new ReceiptService();
                 receiptService.printReceiptDialog(order, cash, this);
-                
                 this.dispose();
                 onSuccess.run();
-                
             } else {
-                // FIXED: Actually tell the user if the database save fails!
                 JOptionPane.showMessageDialog(this, "System Error: Could not save the transaction to the database.", "Transaction Failed", JOptionPane.ERROR_MESSAGE);
             }
         } catch (NumberFormatException ex) {

@@ -43,7 +43,17 @@ public class CartPanel extends JPanel {
         lblTitle.setForeground(UITheme.ACCENT);
         headerPanel.add(lblTitle, BorderLayout.WEST);
 
-        // --- FIXED: Initialize combo box and load dynamic data safely ---
+        // --- ADDED A REFRESH BUTTON NEXT TO DROPDOWN ---
+        JPanel customerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
+        customerPanel.setBackground(UITheme.SECONDARY_BG);
+        
+        JButton btnRefresh = new JButton("↻");
+        btnRefresh.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        btnRefresh.setPreferredSize(new Dimension(35, 35));
+        UITheme.styleFlatButton(btnRefresh, UITheme.PRIMARY_BG, UITheme.HOVER_BG, UITheme.ACCENT);
+        btnRefresh.setToolTipText("Sync Customers from Database");
+        btnRefresh.addActionListener(e -> loadCustomers());
+
         cmbCustomer = new JComboBox<>();
         loadCustomers();
         
@@ -63,7 +73,6 @@ public class CartPanel extends JPanel {
                 button.setCursor(new Cursor(Cursor.HAND_CURSOR));
                 return button;
             }
-            
             @Override
             public void paintCurrentValueBackground(Graphics g, Rectangle bounds, boolean hasFocus) {
                 g.setColor(UITheme.PRIMARY_BG);
@@ -75,13 +84,9 @@ public class CartPanel extends JPanel {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                
                 setOpaque(true); 
-                
                 if (isSelected) { setBackground(UITheme.HOVER_BG); } 
                 else { setBackground(UITheme.PRIMARY_BG); }
-
-                if (index == -1) { setBackground(UITheme.PRIMARY_BG); }
 
                 if (value instanceof Customer) {
                     Customer c = (Customer) value;
@@ -93,7 +98,6 @@ public class CartPanel extends JPanel {
                         setForeground(UITheme.TEXT_PRIMARY); 
                     }
                 }
-                
                 setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10)); 
                 return this;
             }
@@ -109,7 +113,10 @@ public class CartPanel extends JPanel {
         });
         
         cmbCustomer.setPreferredSize(new Dimension(220, 35));
-        headerPanel.add(cmbCustomer, BorderLayout.EAST);
+        customerPanel.add(btnRefresh);
+        customerPanel.add(cmbCustomer);
+        headerPanel.add(customerPanel, BorderLayout.EAST);
+        
         add(headerPanel, BorderLayout.NORTH);
 
         String[] columns = {"Title", "Qty", "Price", "Subtotal"};
@@ -174,7 +181,6 @@ public class CartPanel extends JPanel {
         header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, UITheme.ACCENT));
     }
 
-    // --- NEW METHOD: Allows safe external refreshing of the dropdown ---
     public void loadCustomers() {
         Customer selected = (Customer) cmbCustomer.getSelectedItem();
         
@@ -187,7 +193,6 @@ public class CartPanel extends JPanel {
         }
         cmbCustomer.setModel(model);
         
-        // Try to keep the same person selected after refresh if they still exist
         if (selected != null && selected.getId() != 0) {
             for (int i = 0; i < model.getSize(); i++) {
                 if (model.getElementAt(i).getId() == selected.getId()) {

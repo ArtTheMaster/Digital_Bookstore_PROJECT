@@ -3,20 +3,22 @@
          Laguna Branch - POS Reg        
 ========================================
 Receipt No  : 00000002
-Date        : 2026-05-10 08:59 PM
-Cashier     : admin
+Date        : 2026-05-13 08:21 PM
+Cashier     : Vino
+Customer    : Lorenzo
+Membership  : PLATINUM
 ----------------------------------------
 ITEM                   QTY       AMOUNT
 ----------------------------------------
-Noli Me Tangere        2         720.00
+Pearls                 2        1500.00
 ----------------------------------------
-SUBTOTAL:                        720.00
-DISCOUNT:                          0.00
+SUBTOTAL:                       1500.00
+DISCOUNT:                    -   225.00
 ========================================
-AMOUNT DUE:                      720.00
+AMOUNT DUE:                     1275.00
 ========================================
-CASH TENDERED:                  1000.00
-CHANGE:                          280.00
+CASH TENDERED:                  1500.00
+CHANGE:                          225.00
 
        Official Receipt / Invoice       
         Thank you for shopping!         

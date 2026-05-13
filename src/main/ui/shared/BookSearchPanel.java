@@ -1,6 +1,8 @@
 package main.ui.shared;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -18,6 +20,9 @@ public class BookSearchPanel extends JPanel {
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> rowSorter;
     private final Consumer<Book> onAddBookCallback;
+
+    private JTextField txtSearch;
+    private JComboBox<String> cmbGenre; 
 
     public BookSearchPanel(Consumer<Book> onAddBookCallback) {
         this.onAddBookCallback = onAddBookCallback;
@@ -39,8 +44,8 @@ public class BookSearchPanel extends JPanel {
         JLabel lblQuickSearch = new JLabel("Quick Search:");
         lblQuickSearch.setForeground(UITheme.TEXT_PRIMARY);
 
-        JTextField txtSearch = new JTextField(15);
-        txtSearch.setPreferredSize(new Dimension(200, 35));
+        txtSearch = new JTextField(15);
+        txtSearch.setPreferredSize(new Dimension(180, 35));
         txtSearch.setBackground(UITheme.PRIMARY_BG);
         txtSearch.setForeground(UITheme.TEXT_PRIMARY);
         txtSearch.setCaretColor(UITheme.TEXT_PRIMARY);
@@ -50,15 +55,64 @@ public class BookSearchPanel extends JPanel {
             BorderFactory.createEmptyBorder(5, 10, 5, 10)
         ));
 
+        String[] genres = {"All Categories", "Fiction", "Non-Fiction", "Sci-Fi", "Fantasy", "History", "Mystery", "Educational"};
+        cmbGenre = new JComboBox<>(genres);
+        cmbGenre.setPreferredSize(new Dimension(140, 35));
+        cmbGenre.setBackground(UITheme.PRIMARY_BG);
+        cmbGenre.setForeground(UITheme.TEXT_PRIMARY);
+        cmbGenre.setFocusable(false);
+        cmbGenre.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        cmbGenre.setOpaque(true);
+
+        cmbGenre.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
+            @Override
+            protected JButton createArrowButton() {
+                JButton button = new JButton("\u25BC"); 
+                button.setBackground(UITheme.SECONDARY_BG);
+                button.setForeground(UITheme.TEXT_PRIMARY);
+                button.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+                button.setFocusPainted(false);
+                button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                return button;
+            }
+            
+            // --- THIS FIXES THE GLARING WHITE BOX ---
+            @Override
+            public void paintCurrentValueBackground(Graphics g, Rectangle bounds, boolean hasFocus) {
+                g.setColor(UITheme.PRIMARY_BG);
+                g.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+            }
+        });
+
+        cmbGenre.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                setOpaque(true); 
+                
+                if (isSelected) { 
+                    setBackground(UITheme.HOVER_BG); 
+                    setForeground(UITheme.ACCENT); 
+                } else { 
+                    setBackground(UITheme.PRIMARY_BG); 
+                    setForeground(UITheme.TEXT_PRIMARY); 
+                }
+                
+                setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10)); 
+                return this;
+            }
+        });
+
         JButton btnSearch = new JButton("Search");
         UITheme.styleFlatButton(btnSearch, UITheme.HOVER_BG, UITheme.PRIMARY_BG, UITheme.TEXT_PRIMARY);
         btnSearch.setPreferredSize(new Dimension(80, 35));
 
         searchBarPanel.add(lblQuickSearch); 
         searchBarPanel.add(txtSearch);
+        searchBarPanel.add(cmbGenre); 
         searchBarPanel.add(btnSearch);
 
-        String[] columns = {"ID", "Title", "Author", "Price"};
+        String[] columns = {"ID", "Title", "Author", "Genre", "Price"};
         tableModel = new DefaultTableModel(null, columns) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
         };
@@ -70,12 +124,13 @@ public class BookSearchPanel extends JPanel {
         resultTable.setRowSorter(rowSorter);
 
         DocumentListener searchListener = new DocumentListener() {
-            @Override public void insertUpdate(DocumentEvent e) { executeSearch(txtSearch.getText()); }
-            @Override public void removeUpdate(DocumentEvent e) { executeSearch(txtSearch.getText()); }
-            @Override public void changedUpdate(DocumentEvent e) { executeSearch(txtSearch.getText()); }
+            @Override public void insertUpdate(DocumentEvent e) { executeSearch(); }
+            @Override public void removeUpdate(DocumentEvent e) { executeSearch(); }
+            @Override public void changedUpdate(DocumentEvent e) { executeSearch(); }
         };
         txtSearch.getDocument().addDocumentListener(searchListener);
-        btnSearch.addActionListener(e -> executeSearch(txtSearch.getText()));
+        cmbGenre.addActionListener(e -> executeSearch());
+        btnSearch.addActionListener(e -> executeSearch());
 
         JScrollPane scrollPane = new JScrollPane(resultTable);
         scrollPane.getViewport().setBackground(UITheme.PRIMARY_BG);
@@ -104,15 +159,30 @@ public class BookSearchPanel extends JPanel {
         add(footer, BorderLayout.SOUTH);
     }
 
-    private void executeSearch(String query) {
-        if (query.trim().isEmpty()) {
+    private void executeSearch() {
+        String query = txtSearch.getText().trim();
+        String genre = (String) cmbGenre.getSelectedItem();
+
+        List<RowFilter<Object, Object>> filters = new ArrayList<>();
+
+        if (!query.isEmpty()) {
+            filters.add(RowFilter.regexFilter("(?i)" + query));
+        }
+
+        if (genre != null && !genre.equals("All Categories")) {
+            filters.add(RowFilter.regexFilter("(?i)^" + genre + "$", 3)); 
+        }
+
+        if (filters.isEmpty()) {
             rowSorter.setRowFilter(null);
-            resultTable.clearSelection();
         } else {
-            rowSorter.setRowFilter(RowFilter.regexFilter("(?i)" + query.trim()));
-            if (resultTable.getRowCount() > 0) {
-                resultTable.setRowSelectionInterval(0, 0);
-            }
+            rowSorter.setRowFilter(RowFilter.andFilter(filters));
+        }
+
+        if (resultTable.getRowCount() > 0) {
+            resultTable.setRowSelectionInterval(0, 0);
+        } else {
+            resultTable.clearSelection();
         }
     }
 
@@ -132,11 +202,12 @@ public class BookSearchPanel extends JPanel {
         header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, UITheme.ACCENT));
     }
 
-    // FIXED: Made public so the Cashier Panel can trigger a refresh!
     public void loadAllBooks() {
         tableModel.setRowCount(0);
         for (Book b : bookDAO.getAll()) {
-            tableModel.addRow(new Object[]{b.getId(), b.getTitle(), b.getAuthor(), String.format("₱%.2f", b.getPrice())});
+            tableModel.addRow(new Object[]{
+                b.getId(), b.getTitle(), b.getAuthor(), b.getGenre(), String.format("₱%.2f", b.getPrice())
+            });
         }
     }
 }

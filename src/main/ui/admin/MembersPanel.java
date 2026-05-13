@@ -44,7 +44,6 @@ public class MembersPanel extends JPanel {
         toolbar.setBackground(UITheme.SECONDARY_BG);
         toolbar.setBorder(BorderFactory.createEmptyBorder(15, 0, 10, 0));
 
-        // Search Bar
         JPanel searchBox = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         searchBox.setBackground(UITheme.SECONDARY_BG);
         JTextField txtSearch = new JTextField(20);
@@ -61,7 +60,6 @@ public class MembersPanel extends JPanel {
         searchBox.add(Box.createHorizontalStrut(10));
         searchBox.add(btnSearch);
 
-        // Actions
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         actions.setBackground(UITheme.SECONDARY_BG);
 
@@ -81,7 +79,6 @@ public class MembersPanel extends JPanel {
         headerPanel.add(toolbar, BorderLayout.SOUTH);
         add(headerPanel, BorderLayout.NORTH);
 
-        // Table
         String[] columns = {"ID", "Name", "Phone", "Status", "Tier", "Points"};
         tableModel = new DefaultTableModel(null, columns) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
@@ -230,27 +227,24 @@ public class MembersPanel extends JPanel {
                 String selTier = (String) comboTier.getSelectedItem();
                 double pts = Double.parseDouble(txtPoints.getText().trim());
 
-                // --- FIXED: The Error Handling you requested ---
                 if (!isMem && (pts > 0 || !selTier.equals("SILVER"))) {
-                    JOptionPane.showMessageDialog(this, 
-                        "You must have a membership to attain this privilege.\nPlease check the 'Is Member?' box first.", 
-                        "Membership Required", 
-                        JOptionPane.WARNING_MESSAGE);
-                    return; // Stops the saving process safely!
+                    JOptionPane.showMessageDialog(this, "You must check the 'Is Member?' box to assign a tier or points.", "Membership Required", JOptionPane.WARNING_MESSAGE);
+                    return; 
                 }
 
-                // Ensures the database stays completely clean for non-members
                 if (!isMem) {
                     selTier = null;
                     pts = 0;
                 }
 
+                // --- FIXED: ADDED ELSE BLOCK TO CATCH DB ERRORS ---
                 if (customerDAO.updateMembership(id, isMem, selTier, pts)) {
                     loadData();
                     JOptionPane.showMessageDialog(this, "Membership updated successfully!");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Database Error! Could not save changes. Make sure you ran the SQL command to allow PLATINUM tiers.", "Update Failed", JOptionPane.ERROR_MESSAGE);
                 }
             } catch (NumberFormatException ex) {
-                // FIXED: Prevents system crash if they type "abc" in the points box
                 JOptionPane.showMessageDialog(this, "Points must be a valid number.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "An error occurred: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

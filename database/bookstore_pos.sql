@@ -86,7 +86,17 @@ INSERT INTO books (title, author, genre, isbn, price, description) VALUES
 ('El Filibusterismo', 'Jose Rizal', 'History', '978-9715082541', 400.00, 'Sequel to Noli Me Tangere.'),
 ('Smaller and Smaller Circles', 'F.H. Batacan', 'Mystery', '978-1616955343', 450.00, 'A gripping serial killer thriller set in Manila.'),
 ('The Mythology Class', 'Arnold Arre', 'Fantasy', '978-9719306001', 350.00, 'Philippine mythology meets modern day.'),
-('Trese: Murder on Balete Drive', 'Budjette Tan', 'Horror', '978-9718161359', 250.00, 'Supernatural investigations in Metro Manila.');
+('Trese: Murder on Balete Drive', 'Budjette Tan', 'Horror', '978-9718161359', 250.00, 'Supernatural investigations in Metro Manila.'),
+('Eyes of a Child', 'Richard North Patterson', 'Thriller', '978-0679429883', 1399.00, 'A gripping legal thriller about a devastating custody battle and a shocking murder.'),
+('The Broker', 'John Grisham', 'Thriller', '978-0345532008', 580.00, 'A disgraced power broker is pardoned, only to be hunted by international assassins.'),
+('Safe House', 'Andrew Vachss', 'Mystery', '978-0375719127', 1100.00, 'An intense, dark mystery following an underground investigator navigating the gritty streets.'),
+('Iron House', 'John Hart', 'Thriller', '978-1250007018', 1050.00, 'Two orphaned brothers take drastically different paths in this tale of violence and redemption.'),
+('Trail of Secrets', 'Eileen Goudge', 'Drama', '978-1423358961', 2300.00, 'A dramatic novel of interwoven lives, long-buried secrets, and the search for truth.'),
+('Point of Origin', 'Patricia Cornwell', 'Crime Fiction', '978-1101207345', 580.00, 'Medical examiner Kay Scarpetta investigates a devastating fire linked to a cunning serial killer.'),
+('Against The Wind', 'J.F. Freedman', 'Fiction', '978-0670841158', 1150.00, 'A compelling courtroom drama centered on a controversial and high-stakes criminal trial.'),
+('Partner in Crime', 'J.A. Jance', 'Mystery', '978-0061749049', 580.00, 'A suspenseful whodunit featuring two investigators forced to team up to solve a baffling case.'),
+('An Accidental Woman', 'Barbara Delinsky', 'Romance', '978-0743204705', 850.00, 'A poignant story of love, betrayal, and starting over when a small town is rocked by a scandal.'),
+('Pearls', 'Celia Brayfield', 'Fiction', '978-0701131074', 750.00, 'A sweeping saga of ambition, romance, and the glamour of the international jewelry trade.');
 
 -- Corresponding Inventory (Crucial for the POS to work)
 -- Book ID 2 is purposely set to 3 to trigger your "Low Stock Alert" (Red text in the GUI)
@@ -95,7 +105,17 @@ INSERT INTO inventory (book_id, quantity, low_stock_threshold) VALUES
 (2, 3, 5), 
 (3, 15, 5),
 (4, 30, 10),
-(5, 50, 10);
+(5, 50, 10),
+(6, 12, 4),
+(7, 25, 5),
+(8, 18, 5),
+(9, 10, 3),
+(10, 8, 2),
+(11, 20, 5),
+(12, 15, 5),
+(13, 22, 5),
+(14, 14, 4),
+(15, 11, 3);
 
 -- Sample Suppliers
 INSERT INTO suppliers (name, contact_person, phone, email, address) VALUES
